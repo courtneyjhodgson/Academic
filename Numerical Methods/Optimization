@@ -1,0 +1,317 @@
+%% Assignment 4 (100 points + 20 bonus points)
+% Deadline: 04/28/20 (6PM Central Time)
+%
+%%
+clear
+clc
+close all
+fig = 0;
+
+%% Problem 1: Linear solver (55 points)
+% We are given the following linear system of equations:
+%
+% $7x_{1} + 3x_{2}-x_{3}+1x_{4} = 23$
+%
+% $-4x_{1} -10x_{2} - 2x_{3} +x_{4} = -34$
+%
+% $2x_{1} + 8x_{3} + x_{4} = 9$
+%
+% $x_{1} -3x_{2}  + 7x_{4} = 6$
+%
+% *1a (20 points)*
+%
+% Use Jacobi method to perform 4 iterations. Report the iteration number 
+% and errors at each iterate. Calculate three errors  using the error norm:
+%
+% $err = \frac{||x^{(k)}-x^{(k-1)}||_{\alpha}}{||x^{(k)}||_{\alpha}}$, $\alpha$ = 1, 2, $\infty$
+% 
+% *Answer*
+
+maxitr = 4;
+tol = .00001;
+l1 = 1;
+l2 = 2;
+lInf = inf;
+ 
+A = [7 3 -1 1; -4 -10 -2 1; 2 0 8 1; 1 -3 0 7];
+b = [23 -34 9 6]';
+
+
+[errnorms,err,iter,xn]=jacobi(A,b,maxitr,tol,l1) 
+[errnorms,err,iter,xn]=jacobi(A,b,maxitr,tol,l2)
+[errnorms,err,iter,xn]=jacobi(A,b,maxitr,tol,lInf)
+
+
+
+
+
+%%
+% *1b (5 points)*
+%
+% Which one of the three error norms is most strict and which one is the 
+% least strict? Another way to understand this is, which error norm will result
+% in the most number of iterations and which one will take the least number 
+% of iterations to converge to a given tolerance value given you have
+% already done 1a.
+%
+% *Answer*
+% The infinity-norm is the least strict error norm with the most
+% interations, the 2-norm is a stricter error norm than infinity-norm with 
+% less iterations, the 1-norm is the most strict error norm with the least number of iterations. 
+%%
+
+% *1c (20 points)*
+%
+% Now use Gauss-Seidel method to perform 4 iterations. Report the iteration 
+% number and the 3 errors at each step.
+%
+% *Answer*
+%% Gauss Seidel Method
+%% Solution of x in Ax=b using Gauss Seidel Method
+% * _*Initailize 'A' 'b' & intial guess 'x'*_
+maxitr = 4;
+tol = .00001;
+l1 = 1;
+l2 = 2;
+lInf = inf;
+sor=0;
+lambda=1; 
+xn = [0 0 0 0]';
+
+A = [7 3 -1 1; -4 -10 -2 1; 2 0 8 1; 1 -3 0 7];
+b = [23 -34 9 6]';
+
+[errnorms,err,iter,xn]=gauss_seidel(A,b,xn,lambda,sor,maxitr,tol,l1) %L-1 norm
+[errnorms,err,iter,xn]=gauss_seidel(A,b,xn,lambda,sor,maxitr,tol,l2) %L-2 norm
+[errnorms,err,iter,xn]=gauss_seidel(A,b,xn,lambda,sor,maxitr,tol,lInf) %inf norm
+
+
+%%
+% *1d (10 points)*
+%
+% Solve the above system using Jacobi and Gauss Seidel methods using a tolerance
+% of $10^{-5}$ and $\alpha = \infty$ error norm. Report the solution vector 
+% x and number of iterations for each method. Which one of the two methods 
+% (Jacobi vs Gauss Seidel) performs better and why?
+%
+% *Answer*
+%
+% *Note:* 
+%
+% # You can use Matlab's built in function |norm()| to evaluate the errors. 
+% # You can debug your code using |x = A\b| in Matlab to get the correct answer.
+% # Use an initial guess for $x^{(0)} = [0 \quad 0 \quad 0]^{T}$ for all of
+% the above.
+% # Use a maximum iterations of 100.
+%
+A = [7 3 -1 1; -4 -10 -2 1; 2 0 8 1; 1 -3 0 7];
+b = [23 -34 9 6]';
+[errnorms,err,iter,xn]=jacobi(A,b,100,.00001,inf)
+[errnorms,err,iter,xn]=gauss_seidel(A,b,xn,lambda,sor,100,.00001,inf)
+
+% The Guass-Seidel method performs bettwe since there are less iterations
+% and the method updates values when they are initially calculated rather
+% than at the end. 
+
+
+%% Problem 2: Non-linear solver (45 points)
+%
+% We have the following non-linear system of algebraic equations:
+%
+% $x_{1}-x_{2}+1 = 0$
+%
+% $x_{1}^{2} + x_{2}^{2} - 4 = 0$
+%%
+% Solve this non-linear system of equations using the extended
+% Newton-Raphson method combined with Gauss-Seidel linear solver you
+% programmed for *Problem 1* to solve this system. Report the number of
+% non-linear solver iterations and the final answer.
+%
+% *Hint*: You will have to construct a Jacobian matrix (linearization step) 
+% as explained in the class. The visual representation already gives you a
+% ball-park idea of what the answer should be. There are two answer but you
+% will converge to only one given the initial guess.
+%
+% *Note* 
+%
+% # Use an initial guess of $\Delta x^{(0)} = [0 \quad 0 ]^{T}$ for the linear
+% solver.
+% # Use an initial guess of $x^{(0)} = [2 \quad 2 ]^{T}$ for the non-linear
+% solver.
+% # Use a linear solver tolerance of $10^{-5}$ and a non-linear solver
+% tolerance of $10^{-4}$.
+% # Use a 2-norm for all error calculations: linear and non-linear solver
+% errors.
+% # Use a maximum iterations for linear solver as 100 and non-linear solver as 50.
+%
+% *Answer%
+%
+
+maxitr = 50;
+tol = 0.0001;
+f = @(x1,x2)(x1 - x2 + 1);
+g = @(x1,x2)(x1.^2 + x2.^2 - 4);
+
+[iter,xn]=gauss_newtonraph(f,g,maxitr,tol)
+
+
+
+
+% *3a*
+%
+% Let us say we have two functions in variables $x_{1}$ and $x_{2}$ defined as
+% $f(x_{1},x_{2}) = x_{1}-x_{2}+1$ and $g(x_{1},x_{2}) = x_{1}^{2} +
+% x_{2}^{2} - 4$. Plot the two functions using a Matlab's |surf()| and 
+% |meshgrid()| for x in range (-4,4) and y in range(-4,4). 
+% You will get two surfaces in 3-dimensions. Plot them on the same figure.
+%
+% *Answer*
+
+f = @(x1,x2)(x1 - x2 + 1);
+g = @(x1,x2)(x1.^2 + x2.^2 - 4);
+
+[X,Y]= meshgrid(-4:.1:4, -4:.1:4);
+Z = f(X,Y);
+ZZ = g(X,Y);
+
+surf(X,Y,Z)
+hold on
+surf(X,Y,ZZ)
+
+xlabel('x')
+ylabel('y')
+zlabel('z')
+hold off;
+title('Graph of multi-variate f and g')
+
+
+%%
+%
+% *3b*
+%
+% Well where is this going! Plot another curve $h(x_{1},x_{2}) =
+% f(x_{1},x_{2})^2+g(x_{1},x_{2})^{2}$ on a separate figure. You will see two
+% minima on the surface. With respect to Problem 2, where are the two
+% minimas located? You do not need to give a numerical answer, just a
+% statement as to what the minimas are.
+%
+% *Hint* We drew a visual representation for the  non-linear solver problem
+% in class.
+%
+% *Answer*
+
+f = @(x1,x2)(x1 - x2 + 1);
+g = @(x1,x2)(x1.^2 + x2.^2 - 4);
+h = @(x1,x2)((f(x1,x2).^2)+(g(x1,x2).^2));
+
+[X,Y]= meshgrid(-4:.1:4, -4:.1:4);
+H = h(X,Y);
+
+surf(X,Y,H)
+
+xlabel('x')
+ylabel('y')
+zlabel('z')
+hold off;
+title('Graph of h(x1,x2)')
+
+%The minimas are located at the center of the xy plane near (0,0)
+
+function[errnorms,err,iter,xn]=jacobi(A,b,maxitr,tol,errtype)
+iter = 0;
+err = 1;
+xn = [0 0 0 0]'; %initial zero vector transposed
+xold = xn;
+n=size(xold,1);
+
+%vectorized method
+%diag(A) returns column vector with diagonal entries of A
+b = b./diag(A); %b is a column vector
+A = A./diag(A);
+A = A-diag(diag(A));
+
+while iter<maxitr&&err>tol
+    
+    xn = (b-A*xn); %Jacobi method
+    
+    if errtype == 1
+        err=norm((xn-xold),1)/(norm(xn,1));
+    elseif errtype ==2
+        err=norm((xn-xold),2)/(norm(xn,2));
+    else
+        err=norm((xn-xold),inf)/(norm(xn,inf));
+        
+    end
+    
+    iter=iter+1;
+    errnorms(iter)=norm((xn-xold),errtype)/norm(xn,errtype);
+    xold=xn;
+    
+end
+end
+
+%% Gauss-Seidel
+function [errnorms,err,iter,xn] = gauss_seidel(A,b,xn,lambda,sor,maxitr,tol,errtype)
+iter = 0;
+err=1;
+xold=xn;
+n=size(xold,1);
+errnorms = size(xold,1);
+b = b./diag(A);
+A = A./diag(A);
+A = A-diag(diag(A));
+
+while iter<maxitr&&err>tol
+    for i=1:n %Gauss method
+        xn(i)=b(i)-A(i,:)*xn;
+        if sor==1
+            xn=lambda.*xn+(1-lambda).*xold;
+        end
+    end
+      if errtype ==1
+        err=norm((xn-xold),1)/(norm(xn,1));
+      elseif errtype ==2
+        err=norm((xn-xold),2)/(norm(xn,2));
+    else
+        err=norm((xn-xold),inf)/(norm(xn,inf));
+        
+      end
+      
+    iter=iter+1;
+    errnorms(iter)=norm((xn-xold),errtype)/norm(xn,errtype);
+    xold=xn;
+end
+end
+
+% Gauss Seidel and Newton Raphson Method
+function[iter,xn] = gauss_newtonraph(f,g,maxitr,tol)
+
+xold = [2 2]';
+ini=[0 0]';
+xn = xold;
+err = 1;
+iter = 0;
+lambda = 1;
+sor = 0;
+
+syms x1 x2
+dfdx1 = matlabFunction(diff(f,x1));
+dfdx2 = matlabFunction(diff(f,x2));
+dgdx1 = matlabFunction(diff(g,x1));
+dgdx2 = matlabFunction(diff(g,x2));
+
+while iter<maxitr&&err>tol
+    
+    A = [dfdx1() dfdx2(); dgdx1(xold(1)) dgdx2(xold(2))];
+    b = [-f(xold(1),xold(2)); -g(xold(1),xold(2))];
+    
+    xn= xn+ gauss_seidel(A,b,ini,lambda,sor,100,.00001,2);
+    
+    
+    err=norm((xn-xold),2)/norm(xn,2);
+    xold=xn;
+    iter = iter+1;
+end
+  
+end
+
